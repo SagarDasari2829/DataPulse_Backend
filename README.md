@@ -118,3 +118,10 @@ If the external sync fails but posts already exist in MongoDB, the app continues
 
 - `CORS_ORIGIN` can be a comma-separated list of allowed origins.
 - The repo ignores `.env` and `node_modules` through `.gitignore`.
+
+## Deploying To Vercel
+
+- Set the Vercel project root directory to `backend` if you are deploying from the repo root.
+- Add `MONGODB_URI`, `JWT_SECRET`, `JWT_EXPIRES_IN`, and `CORS_ORIGIN` in Vercel project environment variables.
+- For `CORS_ORIGIN`, include your frontend URL, for example `https://your-frontend.vercel.app`.
+- After deploy, call the backend with the `/api` prefix, for example `https://your-backend.vercel.app/api/health`.

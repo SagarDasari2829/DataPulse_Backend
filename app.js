@@ -1,38 +1,39 @@
 require("dotenv").config();
 
+const cors = require("cors");
 const express = require("express");
 const authRoutes = require("./routes/authRoutes");
 const postRoutes = require("./routes/postRoutes");
 
 const app = express();
 
+const normalizeOrigin = (origin) => origin.trim().replace(/\/$/, "");
+
 const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173")
   .split(",")
-  .map((origin) => origin.trim())
+  .map(normalizeOrigin)
   .filter(Boolean);
 
-const corsMiddleware = (req, res, next) => {
-  const requestOrigin = req.headers.origin;
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin) {
+        return callback(null, true);
+      }
 
-  if (!requestOrigin || allowedOrigins.includes(requestOrigin)) {
-    if (requestOrigin) {
-      res.header("Access-Control-Allow-Origin", requestOrigin);
-      res.header("Vary", "Origin");
-    }
+      const normalizedOrigin = normalizeOrigin(origin);
 
-    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
-    res.header("Access-Control-Allow-Credentials", "true");
-  }
+      if (allowedOrigins.includes(normalizedOrigin)) {
+        return callback(null, true);
+      }
 
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
-  }
-
-  return next();
-};
-
-app.use(corsMiddleware);
+      return callback(new Error("CORS origin not allowed."));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use(express.json());
 
 app.get("/", (req, res) => {
