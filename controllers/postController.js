@@ -2,6 +2,7 @@ const axios = require("axios");
 const Post = require("../models/Post");
 
 const POSTS_SOURCE_URL = "https://jsonplaceholder.typicode.com/posts";
+let syncInFlight = null;
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -63,17 +64,37 @@ const syncPostsFromExternalAPI = async () => {
   }
 };
 
+const ensurePostsAvailable = async () => {
+  const existingCount = await Post.countDocuments();
+
+  if (existingCount > 0) {
+    return existingCount;
+  }
+
+  if (!syncInFlight) {
+    syncInFlight = syncPostsFromExternalAPI().finally(() => {
+      syncInFlight = null;
+    });
+  }
+
+  await syncInFlight;
+  return Post.countDocuments();
+};
+
 const getAllPosts = async (req, res) => {
   try {
+    await ensurePostsAvailable();
     const posts = await Post.find().sort({ externalId: 1 });
-    res.status(200).json(posts);
+    return res.status(200).json(posts);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch posts." });
+    console.error("Failed to fetch posts:", error.message);
+    return res.status(500).json({ message: "Failed to fetch posts." });
   }
 };
 
 const getPostById = async (req, res) => {
   try {
+    await ensurePostsAvailable();
     const { id } = req.params;
     const post = /^\d+$/.test(id)
       ? await Post.findOne({ externalId: Number(id) })
@@ -89,6 +110,7 @@ const getPostById = async (req, res) => {
       return res.status(400).json({ message: "Invalid post id." });
     }
 
+    console.error("Failed to fetch post:", error.message);
     return res.status(500).json({ message: "Failed to fetch post." });
   }
 };
