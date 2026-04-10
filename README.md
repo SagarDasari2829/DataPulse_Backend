@@ -49,7 +49,7 @@ Create a `.env` file based on `.env.example`.
 
 ```env
 PORT=5000
-CORS_ORIGIN=http://localhost:5173
+CORS_ORIGIN=http://localhost:5173,https://data-pulse-frontend-beta.vercel.app
 MONGODB_URI=mongodb://127.0.0.1:27017/datapulse
 JWT_SECRET=replace-with-a-long-random-secret
 JWT_EXPIRES_IN=1d
@@ -123,5 +123,5 @@ If the external sync fails but posts already exist in MongoDB, the app continues
 
 - Set the Vercel project root directory to `backend` if you are deploying from the repo root.
 - Add `MONGODB_URI`, `JWT_SECRET`, `JWT_EXPIRES_IN`, and `CORS_ORIGIN` in Vercel project environment variables.
-- For `CORS_ORIGIN`, include your frontend URL, for example `https://your-frontend.vercel.app`.
+- For `CORS_ORIGIN`, include your frontend URL, for example `https://data-pulse-frontend-beta.vercel.app`.
 - After deploy, call the backend with the `/api` prefix, for example `https://your-backend.vercel.app/api/health`.
